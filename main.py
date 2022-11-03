@@ -82,6 +82,7 @@ def add():
         response = {
             "success": "Successfully added the new cafe"
         }
+        return jsonify(response=response), 201
     except Exception as error:
         db.session.rollback()
         print(error)
@@ -89,10 +90,46 @@ def add():
             "error": "Could not add the new cafe"
         }
 
-    return jsonify(response=response)
+        return jsonify(response=response), 409
 
 
 # HTTP PUT/PATCH - Update Record
+@app.route('/update-price/<id>', methods=['PATCH'])
+def update(id: int):
+    updated_price = request.form.to_dict()['price']
+
+    try:
+        int_id = int(id)
+        float_updated_price = float(updated_price)
+
+        cafe_to_update = Cafe.query.filter_by(id=id).first()
+
+        if cafe_to_update == None:
+            response = {
+                "Not Found": "Sorry a cafe with that id was not found in the database."
+            }
+            return jsonify(error=response), 404
+
+        cafe_to_update.coffee_price = float_updated_price
+
+        db.session.commit()
+
+        response = {
+            "success": "Successfully updated the price."
+        }
+
+        return jsonify(response), 200
+    except ValueError as error:
+        db.session.rollback()
+        print(error)
+        # error_value = f"{error}"
+        response = {
+            # "Error": "The id must be an integer value",
+            "Description": f"{error}"
+        }
+        return jsonify(error=response), 406
+
+
 # HTTP DELETE - Delete Record
 if __name__ == '__main__':
     app.run(debug=True, port=5050)
